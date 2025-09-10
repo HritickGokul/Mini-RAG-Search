@@ -77,8 +77,8 @@ def generate_answer_via_ollama(question: str, top_indices, model: str = "llama3:
 #############################################################################################################
 
 
-st.title("Mini RAG Search App")
-st.write("Hello, This is a mini RAG App I'm building")
+st.title("Mini Search App")
+st.write("You paste a few links from a niche you care about, ask a question, and it returns a concise answer with citations plus the exact evidence passages and source links.")
 
 
 with st.sidebar:
@@ -142,10 +142,10 @@ if st.button("Fetch & Index URL"):
 
 
 #FIND THE TOP MATCHES AND THEN USE THAT TO FEED IT TO THE MODEL TO GENERATE A RESPONSE
-st.markdown("### Search your chunks")
-query = st.text_input("Ask a question (e.g., 'What is RLHF?' or 'What is Constitutional AI?')")
+st.markdown("### Search")
+query = st.text_input("Ask a question")
 
-if st.button("Search chunks"):
+if st.button("Search"):
     if "chunk_vecs" not in st.session_state:
         st.warning("Ingest something first (fetch a URL) so I have chunks to search.")
     elif not query.strip():
@@ -171,12 +171,17 @@ if st.button("Search chunks"):
 
         st.markdown("---")
         st.subheader("Answer (local model via Ollama)")
-        try:
-            answer = generate_answer_via_ollama(query, top_idx, model=ollama_model)
-            st.write(answer)
-        except Exception as e:
-            st.error(f"Ollama error: {e}")
-            st.info("Is Ollama running and is the model pulled? Try:  `ollama pull llama3:8b`")
+
+        with st.status("Generating answer…", expanded=False) as status:
+            try:
+                answer = generate_answer_via_ollama(query, top_idx, model=ollama_model)
+                status.update(label="Answer ready ✓", state="complete")
+                st.write(answer)
+            except Exception as e:
+                status.update(label="Failed", state="error")
+                st.error(f"Ollama error: {e}")
+                st.info("Is Ollama running and is the model pulled? Try:  `ollama pull llama3:8b`")
+
 
 
 
