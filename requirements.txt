@@ -1,0 +1,10 @@
+streamlit==1.37.1
+faiss-cpu==1.8.0.post1
+sentence-transformers==3.0.1
+beautifulsoup4==4.12.3
+trafilatura==1.8.0
+requests==2.32.3
+numpy==1.26.4
+pandas==2.2.2
+python-dotenv==1.0.1
+openai==1.43.0
