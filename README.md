@@ -1,4 +1,4 @@
-\# Mini RAG Search (Ollama-only)
+\#Mini RAG Search (Ollama-only)
 
 
 
@@ -6,7 +6,7 @@ A tiny niche search engine with chunked retrieval and local LLM answers via Olla
 
 
 
-\## Run locally
+\##Run locally
 
 ```bash
 
