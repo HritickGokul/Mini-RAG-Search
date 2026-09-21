@@ -86,6 +86,15 @@ with st.sidebar:
     ollama_model = st.text_input("Ollama model", value="llama3:8b")
     st.caption("Run:  `ollama pull llama3:8b`  and ensure Ollama is running locally.")
 
+st.markdown("""
+    <style>
+    /* Focused (clicked/active) state */
+    div[data-baseweb="textarea"]:focus-within {
+        border: 2px solid #0066ff !important;   /* darker blue border */
+        box-shadow: 0 0 4px #66a3ff !important; /* optional blue glow */
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 #THIS IS WERE WE PASTE THE URLS
 urls_text = st.text_area(
@@ -95,7 +104,7 @@ urls_text = st.text_area(
 )
 
 #FETCH THE DETAILS FROM THE URL, CHUNK IT, EMBED IT AND STORE IT
-if st.button("Fetch & Index URL"):
+if st.button("Fetch Information"):
     all_chunks = []
     sources = []
 
@@ -106,10 +115,9 @@ if st.button("Fetch & Index URL"):
             url = raw.strip()
             if not url:
                 continue
-
             downloaded = trafilatura.fetch_url(url)
             if not downloaded:
-                st.error(f"Could not fetch: {url}, moving onto the next URL")
+                # st.error(f"Could not fetch: {url}, moving onto the next URL")
                 continue
             else:
                 text = trafilatura.extract(
@@ -117,20 +125,20 @@ if st.button("Fetch & Index URL"):
                     include_comments = False,
                     include_links = False
                 ) or ""
-                if not text.strip():
-                    st.warning(f"Could not extract text: {url}, moving onto the next URL")
-                else:
-                    st.success("Done.")
-                    st.write(f"**Character Count:** {len(text)}")
-
-                    chunks = split_text(text, max_words = 800, overlap = 120)
-                    all_chunks.extend(chunks)
-                    sources.extend([url] * len(chunks))
+                # if not text.strip():
+                #     st.warning(f"Could not extract text: {url}, moving onto the next URL")
+                # else:
+                #     st.success("Done.")
+                #     st.write(f"**Character Count:** {len(text)}")
+                chunks = split_text(text, max_words = 600, overlap = 120)
+                all_chunks.extend(chunks)
+                sources.extend([url] * len(chunks))
 
     if not all_chunks:
         st.error("No chunks created from the provided URLs. Try different links.")
     else:
         # Embed chunks
+        st.success("Done.")
         embedder = get_embedder()
         chunk_vecs = embedder.encode(all_chunks, normalize_embeddings=True)
 
@@ -140,10 +148,19 @@ if st.button("Fetch & Index URL"):
         st.session_state["sources"] = sources
 
 
+st.markdown("""
+    <style>
+    /* Focused (clicked/active) state */
+    div[data-baseweb="input"]:focus-within {
+        border: 2px solid #0066ff !important;   /* darker blue border */
+        box-shadow: 0 0 4px #66a3ff !important; /* optional blue glow */
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 #FIND THE TOP MATCHES AND THEN USE THAT TO FEED IT TO THE MODEL TO GENERATE A RESPONSE
-st.markdown("### Search")
-query = st.text_input("Ask a question")
+st.markdown("### Ask a Question")
+query = st.text_input("Ex: What is an LLM?")
 
 if st.button("Search"):
     if "chunk_vecs" not in st.session_state:
@@ -158,7 +175,7 @@ if st.button("Search"):
         sims = st.session_state["chunk_vecs"] @ q_vec
 
         # top-5 indices, sorted by similarity
-        top_k = 5
+        top_k = 3
         top_idx = np.argsort(-sims)[:top_k]
 
         # st.subheader("Top matches")
@@ -172,7 +189,7 @@ if st.button("Search"):
         st.markdown("---")
         st.subheader("Answer (local model via Ollama)")
 
-        with st.status("Generating answer…", expanded=False) as status:
+        with st.status("Generating answer…", expanded=True) as status:
             try:
                 answer = generate_answer_via_ollama(query, top_idx, model=ollama_model)
                 status.update(label="Answer ready ✓", state="complete")
